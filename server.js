@@ -1,5 +1,5 @@
 const app = require("./app");
-const config = require("./config");
+const config = require("./app/config");
 const mongoose = require("mongoose");
 
 async function startServer() {

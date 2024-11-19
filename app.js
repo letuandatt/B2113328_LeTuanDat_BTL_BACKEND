@@ -1,13 +1,12 @@
 const express = require("express");
 const cors = require("cors");
-const ApiError = require("./api-error");
-const rAuth = require("./routes/Auth.route");
-const rDocGia = require("./routes/DocGia.route");
-const rNhanVien = require("./routes/NhanVien.route");
-const rNhaXuatBan = require("./routes/NhaXuatBan.route");
-const rSach = require("./routes/Sach.route");
-const rTheoDoiMuonSach = require("./routes/TheoDoiMuonSach.route");
-const path = require("path");
+const ApiError = require("./app/api-error");
+const rAuth = require("./app/routes/Auth.route");
+const rDocGia = require("./app/routes/DocGia.route");
+const rNhanVien = require("./app/routes/NhanVien.route");
+const rNhaXuatBan = require("./app/routes/NhaXuatBan.route");
+const rSach = require("./app/routes/Sach.route");
+const rTheoDoiMuonSach = require("./app/routes/TheoDoiMuonSach.route");
 
 const app = express();
 

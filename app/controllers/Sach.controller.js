@@ -7,7 +7,7 @@ const path = require("path");
 class SachController {
     static async getAll(req, res, next) {
         try {
-            const books = await Sach.find().populate('nhaxuatban', 'ten');
+            const books = await Sach.find().populate("nhaxuatban", "ten");;
             return res.json(books);
         } catch (error) {
             return next(ApiError.internal(error.message));
@@ -16,18 +16,18 @@ class SachController {
 
     static async create(req, res, next) {
         try {
-            const { ten, tacgia, dongia, soquyen, namxuatban, nxbid } = req.body;
-            if(![ ten, tacgia, dongia, soquyen, namxuatban, nxbid ].every(Boolean)) {
+            const { ten, tacgia, dongia, soquyen, namxuatban, nhaxuatban } = req.body;
+            if(![ ten, tacgia, dongia, soquyen, namxuatban, nhaxuatban ].every(Boolean)) {
                 return next(ApiError.badRequest("Not enough information"));
             }
             
-            const existNhaXuatBan = await NhaXuatBan.exists({ _id: nxbid });
+            const existNhaXuatBan = await NhaXuatBan.exists({ _id: nhaxuatban });
             if(!existNhaXuatBan) {
                 return next(ApiError.notFound("Publisher not found"));
             }
 
             const book = new Sach({
-                ten, tacgia, dongia, soquyen, namxuatban, nhaxuatban: nxbid
+                ten, tacgia, dongia, soquyen, namxuatban, nhaxuatban: nhaxuatban
             });
             await book.save();
             return res.json("Create book succesfully");

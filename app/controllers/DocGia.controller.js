@@ -1,5 +1,5 @@
 const DocGia = require('../models/DocGia.model');
-const ApiError = require('../api-error');
+const ApiError = require('../api-error.js');
 const bcrypt = require("bcrypt");
 
 class DocGiaController {

@@ -15,8 +15,13 @@ class NhaXuatBanController {
         try {
             const { ten, diachi } = req.body;
 
-            if(![ten, body].every(Boolean)) {
+            if(![ten, diachi].every(Boolean)) {
                 return next(ApiError.badRequest("Not enough information"));
+            }
+
+            const existNXB = await NhaXuatBan.findOne({ ten });
+            if(existNXB) {
+                return next(ApiError.badRequest("Existed publisher"));
             }
 
             const publisher = new NhaXuatBan({ ten, diachi });

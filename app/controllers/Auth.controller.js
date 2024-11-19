@@ -1,4 +1,4 @@
-const ApiError = require('../api-error');
+const ApiError = require('../api-error.js');
 const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
@@ -22,12 +22,12 @@ exports.login = async (req, res, next) => {
         if (!req.body?.email || !req.body?.matkhau){
             return next(ApiError.badRequest("Not enough information"));
         }
-        const { email, matkhau } = req.body;
+        const { email, matkhau, role } = req.body;
 
         let user;
-        if (email.includes('@nhanvien.com')) {
+        if (role === 'nhanvien') {
             user = await NhanVien.findOne({ email });
-        } else {
+        } else if (role === 'docgia') {
             user = await DocGia.findOne({ email });
         }
 
@@ -35,11 +35,11 @@ exports.login = async (req, res, next) => {
             return next(ApiError.unauthorized('Invalid email or password'));
         }
         
-        const role = user.role || (email.includes('@nhanvien.com') ? 'nhanvien' : 'docgia');
+        const userRole = role || (email.includes('@nhanvien.com') ? 'nhanvien' : 'docgia');
 
         const token = jwt.sign({
             id: user._id,
-            role: role
+            role: userRole
         }, process.env.JWT_SECRET, { expiresIn: '24h' });
 
         return res.json({ message: 'Login successful', token });
