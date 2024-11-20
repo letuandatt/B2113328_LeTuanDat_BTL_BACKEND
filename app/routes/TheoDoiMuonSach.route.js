@@ -8,5 +8,6 @@ router.get('/', theoDoiMuonSachController.getAllTDMS);
 router.get('/docgia/:id', theoDoiMuonSachController.getAllTDMSByDocGia)
 router.get('/sach/:id', theoDoiMuonSachController.getAllTDMSBySach);
 router.get('/sachcosan/:id', theoDoiMuonSachController.checkSachAvailable);
+router.delete('/:id', theoDoiMuonSachController.delete)
 
 module.exports = router;

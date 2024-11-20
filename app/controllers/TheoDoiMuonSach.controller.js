@@ -9,7 +9,7 @@ const isValidObjectID = (id) => mongoose.Types.ObjectId.isValid(id);
 async function getTDMSWithFilter(req, res, next, filter = {}, option = {}) {
     try {
         const tdms = await TheoDoiMuonSach.find(filter)
-                                            .populate('docgia', 'ten')
+                                            .populate('docgia', 'hoten')
                                             .populate('sach', 'ten')
                                             .sort(option.sort || { ngaymuon: -1 });
         return res.json(tdms);
@@ -19,8 +19,8 @@ async function getTDMSWithFilter(req, res, next, filter = {}, option = {}) {
 }
 
 class TheoDoiMuonSachController {
-    validateDocGiaAndSach = async (docGiaId, sachId) => {
-        const [docgia, sach] = Promise.all([
+    static async validateDocGiaAndSach(docgiaId, sachId) {
+        const [docgia, sach] = await Promise.all([
             DocGia.findById(docgiaId),
             Sach.findById(sachId),
         ]);
@@ -30,7 +30,8 @@ class TheoDoiMuonSachController {
         if (!sach) {
             return ApiError.notFound("Book not found");
         }
-    }
+        return docgia, sach;
+    };
 
     static async muonSach(req, res, next) {
         try {
@@ -38,11 +39,13 @@ class TheoDoiMuonSachController {
             if (!isValidObjectID(docgiaId) || !isValidObjectID(sachId)) {
                 return next(ApiError.badRequest("ID invalid"));
             }
-            await validateDocGiaAndSach(docgiaId, sachId);
+            await TheoDoiMuonSachController.validateDocGiaAndSach(docgiaId, sachId);
             const muonSach = await TheoDoiMuonSach.create({
                 docgia: docgiaId,
                 sach: sachId,
             })
+            console.log(docgiaId);
+            
             return res.json(muonSach);
         } catch (error) {
             return next(ApiError.badRequest(error.message));
@@ -94,6 +97,18 @@ class TheoDoiMuonSachController {
             }
             const sachConlai = sach.soquyen - daMuon;
             return res.json({ available: sachConlai > 0, sachConlai});
+        } catch (error) {
+            return next(ApiError.internal(error.message));
+        }
+    }
+
+    static async delete(req, res, next) {
+        try {
+            const tdms = await TheoDoiMuonSach.findByIdAndDelete(req.params.id);
+            if (!tdms) {
+                return next(ApiError.notFound("This borrowing slot not found"));
+            }
+            return res.json({ message: "Delete successfully" });
         } catch (error) {
             return next(ApiError.internal(error.message));
         }

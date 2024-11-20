@@ -5,7 +5,7 @@ const jwt = require("jsonwebtoken");
 const DocGia = require("../models/DocGia.model");
 const NhanVien = require("../models/NhanVien.model");
 const redis = require("redis");
-const client = redis.createClient();
+const client = redis.createClient(); // Tạo kết nối Redis tại đây
 
 require("dotenv").config();
 
@@ -34,7 +34,7 @@ exports.login = async (req, res, next) => {
         if (!user || !(await bcrypt.compare(matkhau, user.matkhau))) {
             return next(ApiError.unauthorized('Invalid email or password'));
         }
-        
+
         const userRole = role || (email.includes('@nhanvien.com') ? 'nhanvien' : 'docgia');
 
         const token = jwt.sign({
@@ -48,11 +48,39 @@ exports.login = async (req, res, next) => {
     }
 };
 
+exports.logout = async (req, res, next) => {
+    try {
+        const token = req.headers['authorization']?.split(' ')[1]; // Lấy token từ header
+        if (!token) {
+            return next(ApiError.unauthorized("Token not provided"));
+        }
+
+        // Xác minh token và giải mã để lấy user ID
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const userId = decoded.id;
+
+        // Đảm bảo client Redis được kết nối trước khi thực hiện bất kỳ thao tác nào
+        client.on("connect", function() {
+            // Lưu trạng thái token vào Redis (đánh dấu token đã logout)
+            client.set(userId.toString(), "invalid", "EX", 86400, (err, reply) => {
+                if (err) {
+                    console.error("Error setting token in Redis:", err);
+                    return next(ApiError.internal("Error invalidating token"));
+                }
+                console.log("Token invalidated for user:", userId);
+                return res.json({ message: 'Logout successful' });
+            });
+        });
+    } catch (error) {
+        next(ApiError.internal(error.message));
+    }
+};
+
 exports.register = async (req, res, next) => {
     try {
         const { hoten, email, matkhau, phai, diachi, dienthoai } = req.body;
 
-        if(![hoten, email, matkhau, phai, diachi, dienthoai].every(Boolean)) {
+        if (![hoten, email, matkhau, phai, diachi, dienthoai].every(Boolean)) {
             return next(ApiError.badRequest("Not enough information"));
         }
 
