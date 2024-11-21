@@ -42,35 +42,7 @@ exports.login = async (req, res, next) => {
             role: userRole
         }, process.env.JWT_SECRET, { expiresIn: '24h' });
 
-        return res.json({ message: 'Login successful', token });
-    } catch (error) {
-        next(ApiError.internal(error.message));
-    }
-};
-
-exports.logout = async (req, res, next) => {
-    try {
-        const token = req.headers['authorization']?.split(' ')[1]; // Lấy token từ header
-        if (!token) {
-            return next(ApiError.unauthorized("Token not provided"));
-        }
-
-        // Xác minh token và giải mã để lấy user ID
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        const userId = decoded.id;
-
-        // Đảm bảo client Redis được kết nối trước khi thực hiện bất kỳ thao tác nào
-        client.on("connect", function() {
-            // Lưu trạng thái token vào Redis (đánh dấu token đã logout)
-            client.set(userId.toString(), "invalid", "EX", 86400, (err, reply) => {
-                if (err) {
-                    console.error("Error setting token in Redis:", err);
-                    return next(ApiError.internal("Error invalidating token"));
-                }
-                console.log("Token invalidated for user:", userId);
-                return res.json({ message: 'Logout successful' });
-            });
-        });
+        return res.json({ message: 'Login successful', token, user });
     } catch (error) {
         next(ApiError.internal(error.message));
     }

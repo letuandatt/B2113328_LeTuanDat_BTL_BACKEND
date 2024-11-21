@@ -39,13 +39,20 @@ class TheoDoiMuonSachController {
             if (!isValidObjectID(docgiaId) || !isValidObjectID(sachId)) {
                 return next(ApiError.badRequest("ID invalid"));
             }
+            
+            const sach = await Sach.findById(sachId);
+            const daMuon = await TheoDoiMuonSach.countDocuments({ sach: sachId, ngaytra: { $exists: false }});
+
+            if (sach.soquyen <= daMuon) {
+                return next(ApiError.badRequest("Sách đã hết, không thể mượn thêm"));
+            }
+
             await TheoDoiMuonSachController.validateDocGiaAndSach(docgiaId, sachId);
             const muonSach = await TheoDoiMuonSach.create({
                 docgia: docgiaId,
                 sach: sachId,
-            })
-            console.log(docgiaId);
-            
+            });
+
             return res.json(muonSach);
         } catch (error) {
             return next(ApiError.badRequest(error.message));
@@ -54,22 +61,27 @@ class TheoDoiMuonSachController {
 
     static async traSach(req, res, next) {
         try {
-            if (!isValidObjectID(req.params.id)){
-                return next(ApiError.badRequest("ID invalid"));
+            const id = req.params.id;
+            
+            if (!isValidObjectID(id)) {
+                return next(ApiError.badRequest("ID không hợp lệ"));
             }
-            const traSach = await TheoDoiMuonSach.findByIdAndUpdate(
-                req.params.id,
-                { ngaytra: new Date() },
-                { new: true },
-            );
+
+            const traSach = await TheoDoiMuonSach.findById(id);
             if (!traSach) {
-                return next(ApiError.notFound("Can't find this book borrowing slot"))
+                return next(ApiError.notFound("Không tìm thấy bản ghi mượn sách"));
             }
+
+            traSach.ngaytra = new Date();
+            await traSach.save();
+
             return res.json(traSach);
         } catch (error) {
+            console.log(error.message);
             return next(ApiError.internal(error.message));
         }
     }
+
 
     static getAllTDMS(req, res, next) {
         return getTDMSWithFilter(req, res, next, {}, {});
